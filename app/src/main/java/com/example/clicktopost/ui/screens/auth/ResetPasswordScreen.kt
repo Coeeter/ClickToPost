@@ -1,20 +1,15 @@
-package com.example.clicktopost.ui.screens.forgetPassword
+package com.example.clicktopost.ui.screens.auth
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -26,18 +21,29 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 @Composable
-fun ForgetPasswordScreen(
+fun ResetPasswordScreen(
     navController: NavHostController,
-    viewModel: ForgetPasswordViewModel = hiltViewModel()
+    mode: String,
+    oob: String,
+    viewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val focusManager = LocalFocusManager.current
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     var isLoading by remember { mutableStateOf(false) }
-    val emailError = remember { mutableStateOf("") }
+    val passwordError = remember { mutableStateOf("") }
+    val confirmPasswordError = remember { mutableStateOf("") }
 
-    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val confirmPassword by viewModel.confirmPassword.collectAsState()
+
+    LaunchedEffect(mode, oob) {
+        if (mode != "resetPassword" || oob.isEmpty()) {
+            scaffoldState.snackbarHostState.showSnackbar("Invalid link given")
+            navController.popBackStack()
+        }
+    }
 
     suspend fun authStateListener(it: AuthState) {
         when (it) {
@@ -46,21 +52,19 @@ fun ForgetPasswordScreen(
             }
             is AuthState.Success -> {
                 isLoading = false
-                scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                scaffoldState.snackbarHostState.showSnackbar(
-                    "Sent password reset link to email. Follow the instructions on the email to reset your password",
-                    "Okay"
-                )
-                navController.popBackStack()
             }
             is AuthState.Failure -> {
                 isLoading = false
                 scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                 scaffoldState.snackbarHostState.showSnackbar(it.message, "Okay")
             }
-            is AuthState.InvalidEmail -> {
+            is AuthState.InvalidPassword -> {
                 isLoading = false
-                emailError.value = it.message
+                passwordError.value = it.message
+            }
+            is AuthState.InvalidConfirmPassword -> {
+                isLoading = false
+                confirmPasswordError.value = it.message
             }
             else -> {}
         }
@@ -69,7 +73,7 @@ fun ForgetPasswordScreen(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            AppBar(title = "Forgot Password?") {
+            AppBar(title = "Reset password") {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "")
                 }
@@ -77,28 +81,6 @@ fun ForgetPasswordScreen(
         }
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(modifier = Modifier.height(15.dp))
-            Surface(
-                shape = CircleShape,
-                border = BorderStroke(2.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.7f)),
-                modifier = Modifier.size(100.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = "",
-                    modifier = Modifier.padding(20.dp),
-                    tint = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                )
-            }
-            Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = "Enter your email registered with an account and the password reset link will be sent to your email",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 40.dp),
-                color = MaterialTheme.colors.onSurface.copy(
-                    alpha = 0.5f
-                )
-            )
             Spacer(modifier = Modifier.height(15.dp))
             Surface(
                 modifier = Modifier.padding(horizontal = 30.dp),
@@ -114,23 +96,33 @@ fun ForgetPasswordScreen(
                     )
                 ) {
                     TextInput(
-                        value = email,
-                        label = "Email",
-                        error = emailError,
-                        onValueChange = { viewModel.email.value = it },
-                        keyboardType = KeyboardType.Email
+                        value = password,
+                        label = "New password",
+                        error = passwordError,
+                        onValueChange = { viewModel.password.value = it },
+                        isPassword = true,
+                        keyboardType = KeyboardType.Password
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TextInput(
+                        value = confirmPassword,
+                        label = "Confirm password",
+                        error = confirmPasswordError,
+                        onValueChange = { viewModel.confirmPassword.value = it },
+                        isPassword = true,
+                        keyboardType = KeyboardType.Password
                     )
                     Spacer(modifier = Modifier.height(30.dp))
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             focusManager.clearFocus(true)
-                            viewModel.resetPassword()
+                            viewModel.resetPassword(oob)
                                 .onEach(::authStateListener)
                                 .launchIn(scope)
                         }
                     ) {
-                        Text("Submit")
+                        Text("Reset Password")
                     }
                 }
             }

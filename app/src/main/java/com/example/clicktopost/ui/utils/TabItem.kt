@@ -1,4 +1,4 @@
-package com.example.clicktopost.ui.screens.auth
+package com.example.clicktopost.ui.utils
 
 import androidx.compose.runtime.Composable
 

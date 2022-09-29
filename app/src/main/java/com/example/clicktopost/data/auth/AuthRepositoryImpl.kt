@@ -1,25 +1,39 @@
 package com.example.clicktopost.data.auth
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import com.example.clicktopost.BuildConfig
 import com.example.clicktopost.domain.auth.AuthRepository
+import com.example.clicktopost.domain.auth.models.DeepLinkData
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.AuthCredential
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.*
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val context: Context,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val firebaseDynamicLinks: FirebaseDynamicLinks
 ) : AuthRepository {
     override fun getCurrentUser(): FirebaseUser? {
         return firebaseAuth.currentUser
+    }
+
+    override suspend fun getDataFromDeepLink(intent: Intent): DeepLinkData? {
+        val link = firebaseDynamicLinks
+            .getDynamicLink(intent)
+            .await()
+            ?.link
+            ?: return null
+        val mode = link.getQueryParameter("mode") ?: return null
+        val oob = link.getQueryParameter("oobCode") ?: return null
+        firebaseAuth.verifyPasswordResetCode(oob).await()
+        return DeepLinkData(mode, oob)
     }
 
     override fun addAuthStateListener(listener: FirebaseAuth.AuthStateListener) {
@@ -35,7 +49,16 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendPasswordResetLink(email: String) {
-        firebaseAuth.sendPasswordResetEmail(email).await()
+        val actionCodeSettings = ActionCodeSettings.newBuilder()
+            .setAndroidPackageName(
+                "com.example.clicktopost",
+                true,
+                null
+            )
+            .setHandleCodeInApp(true)
+            .setUrl("https://clicktopostapp.page.link/dmCn")
+            .build()
+        firebaseAuth.sendPasswordResetEmail(email, actionCodeSettings).await()
     }
 
     override fun getGoogleSignInClient(): GoogleSignInClient {
@@ -63,6 +86,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun updatePassword(password: String) {
         firebaseAuth.currentUser!!.updatePassword(password).await()
+    }
+
+    override suspend fun updatePasswordFromDeepLink(code: String, password: String) {
+        val email = firebaseAuth.verifyPasswordResetCode(code).await()
+        firebaseAuth.confirmPasswordReset(code, password).await()
+        signInWithEmailAndPassword(email, password)
     }
 
     override suspend fun updateProfilePhoto(uri: Uri) {

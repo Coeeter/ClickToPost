@@ -1,23 +1,26 @@
 package com.example.clicktopost.ui.screens.auth
 
 import android.content.Intent
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.clicktopost.domain.auth.models.AuthState
+import com.example.clicktopost.domain.auth.models.DeepLinkData
 import com.example.clicktopost.domain.auth.useCases.*
-import com.example.clicktopost.ui.utils.Screens
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    getCurrentUserUseCase: GetCurrentUserUseCase,
     private val loginUseCase: LoginUseCase,
     private val registerUserCase: RegisterUseCase,
+    private val forgetPasswordUseCase: ResetPasswordUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val getGoogleSignInClientUseCase: GetGoogleSignInClientUseCase,
-    private val authStateListenerUseCase: AddAuthStateListenerUseCase,
 ) : ViewModel() {
     val loginEmail = MutableStateFlow("")
     val loginPassword = MutableStateFlow("")
@@ -28,17 +31,29 @@ class AuthViewModel @Inject constructor(
 
     val signUpName = MutableStateFlow("")
     val signUpEmail = MutableStateFlow("")
-    val signUpPassword = MutableStateFlow("")
-    val signUpConfirmPassword = MutableStateFlow("")
+    val password = MutableStateFlow("")
+    val confirmPassword = MutableStateFlow("")
 
     fun signUp(): Flow<AuthState> {
         return registerUserCase(
             signUpName.value,
             signUpEmail.value,
-            signUpPassword.value,
-            signUpConfirmPassword.value
+            password.value,
+            confirmPassword.value
         )
     }
+
+    val email = MutableStateFlow("")
+
+    fun sendPasswordResetLinkToEmail(): Flow<AuthState> {
+        return forgetPasswordUseCase(email.value)
+    }
+
+    fun resetPassword(oob: String) = updateUserUseCase.updatePasswordFromDeepLink(
+        oob,
+        password.value,
+        confirmPassword.value
+    )
 
     fun signOut() = signOutUseCase()
 
@@ -46,30 +61,5 @@ class AuthViewModel @Inject constructor(
 
     fun loginUsingGoogle(intent: Intent): Flow<AuthState> {
         return loginUseCase.loginWithGoogleCredentials(intent)
-    }
-
-    private val _loggedInUser = MutableStateFlow(getCurrentUserUseCase())
-    val loggedInUser = _loggedInUser.asStateFlow()
-
-    val isLoggedIn = _loggedInUser.map { user -> user != null }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
-
-    val startDestination = isLoggedIn.map {
-        if (it) return@map Screens.HomeScreen.route
-        Screens.AuthScreen.route
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(),
-        null
-    )
-
-    init {
-        getUserUpdates()
-    }
-
-    private fun getUserUpdates() {
-        authStateListenerUseCase {
-            _loggedInUser.value = it.currentUser
-        }
     }
 }

@@ -14,7 +14,7 @@ fun LoadingComponent(visibility: Boolean) {
     if (visibility)
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.primary.copy(alpha = if (MaterialTheme.colors.isLight) 0.5f else 0.2f),
+            color = MaterialTheme.colors.secondary.copy(alpha = if (MaterialTheme.colors.isLight) 0.5f else 0.2f),
         ) {
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()

@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.clicktopost.data.auth.AuthRepositoryImpl
 import com.example.clicktopost.domain.auth.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
@@ -20,6 +21,9 @@ object FirebaseModule {
     fun providesFirebaseAuth() = FirebaseAuth.getInstance()
 
     @Provides
+    fun providesFirebaseDynamicLinks() = FirebaseDynamicLinks.getInstance()
+
+    @Provides
     fun providesFireStore() = FirebaseFirestore.getInstance()
 
     @Provides
@@ -29,6 +33,7 @@ object FirebaseModule {
     @Singleton
     fun providesAuthRepository(
         @ApplicationContext context: Context,
-        firebaseAuth: FirebaseAuth
-    ): AuthRepository = AuthRepositoryImpl(context, firebaseAuth)
+        firebaseAuth: FirebaseAuth,
+        firebaseDynamicLinks: FirebaseDynamicLinks
+    ): AuthRepository = AuthRepositoryImpl(context, firebaseAuth, firebaseDynamicLinks)
 }

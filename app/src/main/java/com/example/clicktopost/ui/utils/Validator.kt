@@ -17,7 +17,7 @@ object Validator {
         validateFieldIfEmpty("Password", password)
         if (!checkLength) return
         if (password.length < 6)
-            throw Exception("Password should be at least 6 characters long@")
+            throw Exception("Password should be at least 6 characters long!")
     }
 
     fun validateConfirmPassword(password: String, confirmPassword: String) {

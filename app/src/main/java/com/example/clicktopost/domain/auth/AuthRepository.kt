@@ -1,6 +1,8 @@
 package com.example.clicktopost.domain.auth
 
+import android.content.Intent
 import android.net.Uri
+import com.example.clicktopost.domain.auth.models.DeepLinkData
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
@@ -9,6 +11,7 @@ import com.google.firebase.auth.FirebaseUser
 interface AuthRepository {
     fun getCurrentUser(): FirebaseUser?
     fun getGoogleSignInClient(): GoogleSignInClient
+    suspend fun getDataFromDeepLink(intent: Intent): DeepLinkData?
 
     suspend fun signInWithEmailAndPassword(email: String, password: String)
     suspend fun signInWithCredentials(credential: AuthCredential)
@@ -17,6 +20,7 @@ interface AuthRepository {
 
     suspend fun updateEmail(email: String)
     suspend fun updatePassword(password: String)
+    suspend fun updatePasswordFromDeepLink(code: String, password: String)
     suspend fun updateUsername(name: String)
     suspend fun updateProfilePhoto(uri: Uri)
     suspend fun sendPasswordResetLink(email: String)

@@ -2,6 +2,7 @@ package com.example.clicktopost.ui.utils
 
 sealed class Screens(val route: String) {
     object AuthScreen : Screens("/auth")
+    object ResetPasswordScreen: Screens("/reset")
     object ForgetPasswordScreen : Screens("/forget-message")
     object HomeScreen : Screens("/home")
     object ChatsScreen : Screens("/chats")

@@ -32,8 +32,8 @@ fun SignUpForm(
 
     val name by viewModel.signUpName.collectAsState()
     val email by viewModel.signUpEmail.collectAsState()
-    val password by viewModel.signUpPassword.collectAsState()
-    val confirmPassword by viewModel.signUpConfirmPassword.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val confirmPassword by viewModel.confirmPassword.collectAsState()
 
     Column(modifier = Modifier.padding(horizontal = 15.dp)) {
         TextInput(
@@ -57,7 +57,7 @@ fun SignUpForm(
             error = passwordError,
             isPassword = true,
             keyboardType = KeyboardType.Password,
-            onValueChange = { viewModel.signUpPassword.value = it }
+            onValueChange = { viewModel.password.value = it }
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextInput(
@@ -66,7 +66,7 @@ fun SignUpForm(
             error = confirmPasswordError,
             isPassword = true,
             keyboardType = KeyboardType.Password,
-            onValueChange = { viewModel.signUpConfirmPassword.value = it }
+            onValueChange = { viewModel.confirmPassword.value = it }
         )
         Spacer(modifier = Modifier.height(30.dp))
         Button(

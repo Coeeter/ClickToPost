@@ -17,17 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
+import com.example.clicktopost.ui.MainViewModel
 import com.example.clicktopost.ui.components.AppBar
 import com.example.clicktopost.ui.screens.auth.AuthViewModel
 
 @Composable
 fun HomeScreen(
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     Scaffold(
         topBar = { AppBar(title = "Home") }
     ) {
-        val user by authViewModel.loggedInUser.collectAsState()
+        val user by mainViewModel.loggedInUser.collectAsState()
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,

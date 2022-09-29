@@ -21,15 +21,17 @@ import com.example.clicktopost.ui.components.LoadingComponent
 import com.example.clicktopost.ui.screens.auth.components.LoginForm
 import com.example.clicktopost.ui.screens.auth.components.SignUpForm
 import com.example.clicktopost.ui.theme.Dangrek
+import com.example.clicktopost.ui.utils.TabItem
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AuthScreen(
     navHostController: NavHostController
 ) {
-    var isLoading by remember { mutableStateOf(false) }
     val scaffoldState = rememberScaffoldState()
     var selectedTab by remember { mutableStateOf(0) }
+    var isLoading by remember { mutableStateOf(false) }
+
     val tabs = listOf(
         TabItem.LoginScreen() {
             LoginForm(
